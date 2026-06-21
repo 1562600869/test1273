@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>陶笛工作室 - 学员课时与考级管理</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f5f0eb;color:#333;min-height:100vh}
+.header{background:linear-gradient(135deg,#8b5e3c,#c49a6c);color:#fff;padding:20px 30px;display:flex;align-items:center;gap:16px}
+.header h1{font-size:22px;font-weight:600}
+.header p{font-size:13px;opacity:.85}
+.tabs{display:flex;background:#fff;border-bottom:2px solid #e8ddd0;padding:0 20px}
+.tab{padding:12px 24px;cursor:pointer;font-size:14px;color:#8b7355;border-bottom:2px solid transparent;transition:all .2s;user-select:none}
+.tab:hover{color:#6b4226}
+.tab.active{color:#6b4226;border-bottom-color:#8b5e3c;font-weight:600}
+.container{max-width:1100px;margin:20px auto;padding:0 20px}
+.card{background:#fff;border-radius:10px;box-shadow:0 2px 12px rgba(139,94,60,.08);padding:24px;margin-bottom:20px}
+.card h2{font-size:17px;color:#6b4226;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid #f0e6d8}
+.btn{display:inline-block;padding:8px 18px;border:none;border-radius:6px;cursor:pointer;font-size:13px;transition:all .15s}
+.btn-primary{background:#8b5e3c;color:#fff}.btn-primary:hover{background:#6b4226}
+.btn-success{background:#5a8f5c;color:#fff}.btn-success:hover{background:#487a4a}
+.btn-danger{background:#c0392b;color:#fff}.btn-danger:hover{background:#a93226}
+.btn-warning{background:#d4a843;color:#fff}.btn-warning:hover{background:#b8922e}
+.btn-sm{padding:5px 12px;font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#faf5ef;color:#6b4226;font-weight:600;text-align:left;padding:10px 12px;border-bottom:2px solid #e8ddd0}
+td{padding:10px 12px;border-bottom:1px solid #f5efe8}
+tr:hover td{background:#fdfaf6}
+.badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:500}
+.badge-green{background:#e8f5e9;color:#2e7d32}
+.badge-yellow{background:#fff8e1;color:#f57f17}
+.badge-gray{background:#f0f0f0;color:#666}
+.badge-blue{background:#e3f2fd;color:#1565c0}
+.form-row{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;align-items:end}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group label{font-size:12px;color:#8b7355;font-weight:500}
+.form-group input,.form-group select{padding:7px 12px;border:1px solid #d4c4b0;border-radius:6px;font-size:13px;outline:none;transition:border .2s}
+.form-group input:focus,.form-group select:focus{border-color:#8b5e3c}
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:12px;padding:28px;width:440px;max-width:90vw;max-height:80vh;overflow-y:auto}
+.modal h3{color:#6b4226;margin-bottom:18px;font-size:16px}
+.modal .form-row{flex-direction:column}
+.toast{position:fixed;top:20px;right:20px;padding:12px 24px;border-radius:8px;color:#fff;font-size:14px;z-index:200;animation:slideIn .3s}
+.toast-success{background:#5a8f5c}
+.toast-error{background:#c0392b}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+.stat-item{background:linear-gradient(135deg,#faf5ef,#f0e6d8);border-radius:8px;padding:16px;text-align:center}
+.stat-item .num{font-size:28px;font-weight:700;color:#6b4226}
+.stat-item .lbl{font-size:12px;color:#8b7355;margin-top:4px}
+.empty{text-align:center;padding:30px;color:#b0a090;font-size:14px}
+.section{display:none}
+.section.active{display:block}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>陶笛工作室</h1>
+  <p>学员课时与考级管理系统</p>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="students">学员管理</div>
+  <div class="tab" data-tab="packages">课时包</div>
+  <div class="tab" data-tab="consume">上课消课</div>
+  <div class="tab" data-tab="grades">考级申请</div>
+  <div class="tab" data-tab="stats">本月统计</div>
+</div>
+
+<div class="container">
+
+  <div class="section active" id="sec-students">
+    <div class="card">
+      <h2>添加学员</h2>
+      <div class="form-row">
+        <div class="form-group"><label>昵称</label><input id="s-nick" placeholder="学员昵称"></div>
+        <div class="form-group"><label>手机</label><input id="s-phone" placeholder="手机号"></div>
+        <div class="form-group"><label>当前级别</label>
+          <select id="s-level"><option>入门</option><option>一级</option><option>二级</option><option>三级</option><option>四级</option><option>五级</option></select>
+        </div>
+        <div class="form-group"><label>状态</label>
+          <select id="s-status"><option>在读</option><option>暂停</option><option>结业</option></select>
+        </div>
+        <button class="btn btn-primary" onclick="addStudent()">添加</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>学员列表</h2>
+      <table><thead><tr><th>ID</th><th>昵称</th><th>手机</th><th>级别</th><th>状态</th><th>剩余课时</th><th>操作</th></tr></thead>
+      <tbody id="stu-tbody"></tbody></table>
+    </div>
+  </div>
+
+  <div class="section" id="sec-packages">
+    <div class="card">
+      <h2>购买课时包</h2>
+      <div class="form-row">
+        <div class="form-group"><label>学员</label><select id="p-student"></select></div>
+        <div class="form-group"><label>购买日期</label><input type="date" id="p-date"></div>
+        <div class="form-group"><label>课时数</label><input type="number" id="p-hours" min="1" placeholder="正整数"></div>
+        <div class="form-group"><label>有效期截止</label><input type="date" id="p-expiry"></div>
+        <button class="btn btn-primary" onclick="purchasePackage()">购买</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>课时包查询</h2>
+      <div class="form-row">
+        <div class="form-group"><label>学员</label><select id="p-query-student" onchange="loadPackages()"></select></div>
+      </div>
+      <table><thead><tr><th>ID</th><th>购买日期</th><th>总课时</th><th>剩余</th><th>有效期</th><th>状态</th></tr></thead>
+      <tbody id="pkg-tbody"></tbody></table>
+    </div>
+  </div>
+
+  <div class="section" id="sec-consume">
+    <div class="card">
+      <h2>上课消课</h2>
+      <div class="form-row">
+        <div class="form-group"><label>学员</label><select id="c-student" onchange="loadRemaining()"></select></div>
+        <button class="btn btn-success" onclick="consumeClass()">消课（扣1节）</button>
+      </div>
+      <div id="remaining-info" style="margin-top:12px;font-size:14px;color:#6b4226"></div>
+    </div>
+    <div class="card">
+      <h2>消课记录</h2>
+      <div class="form-row">
+        <div class="form-group"><label>学员</label><select id="c-query-student" onchange="loadAttendance()"></select></div>
+      </div>
+      <table><thead><tr><th>ID</th><th>消课时间</th><th>课时包信息</th></tr></thead>
+      <tbody id="att-tbody"></tbody></table>
+    </div>
+  </div>
+
+  <div class="section" id="sec-grades">
+    <div class="card">
+      <h2>考级申请</h2>
+      <div class="form-row">
+        <div class="form-group"><label>学员</label><select id="g-student" onchange="onGradeStudentChange()"></select></div>
+        <div class="form-group"><label>目标级别</label><select id="g-target"><option>一级</option><option>二级</option><option>三级</option><option>四级</option><option>五级</option></select></div>
+        <div class="form-group"><label>结果</label><select id="g-passed"><option value="1">通过</option><option value="0">未通过</option></select></div>
+        <button class="btn btn-warning" onclick="applyGrade()">提交申请</button>
+      </div>
+      <div id="grade-hint" style="margin-top:8px;font-size:13px;color:#8b7355"></div>
+    </div>
+    <div class="card">
+      <h2>考级记录</h2>
+      <table><thead><tr><th>ID</th><th>学员</th><th>当前级别</th><th>目标级别</th><th>结果</th><th>申请时间</th></tr></thead>
+      <tbody id="grade-tbody"></tbody></table>
+    </div>
+  </div>
+
+  <div class="section" id="sec-stats">
+    <div class="card">
+      <h2>本月各级别上课次数</h2>
+      <div class="stat-grid" id="stat-grid"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <h3>编辑学员</h3>
+    <input type="hidden" id="e-id">
+    <div class="form-row">
+      <div class="form-group"><label>昵称</label><input id="e-nick"></div>
+      <div class="form-group"><label>手机</label><input id="e-phone"></div>
+      <div class="form-group"><label>级别</label>
+        <select id="e-level"><option>入门</option><option>一级</option><option>二级</option><option>三级</option><option>四级</option><option>五级</option></select>
+      </div>
+      <div class="form-group"><label>状态</label>
+        <select id="e-status"><option>在读</option><option>暂停</option><option>结业</option></select>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="saveStudent()">保存</button>
+      <button class="btn" style="background:#ddd" onclick="closeModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var levels=["入门","一级","二级","三级","四级","五级"];
+
+function toast(msg,isErr){
+  var d=document.createElement("div");
+  d.className="toast "+(isErr?"toast-error":"toast-success");
+  d.textContent=msg;
+  document.body.appendChild(d);
+  setTimeout(function(){d.remove()},2500);
+}
+
+function api(method,path,body){
+  var opts={method:method,headers:{"Content-Type":"application/json"}};
+  if(body)opts.body=JSON.stringify(body);
+  return fetch("/api"+path,opts).then(function(r){return r.json()}).then(function(d){
+    if(!d.success)throw new Error(d.error);
+    return d.data;
+  });
+}
+
+document.querySelectorAll(".tab").forEach(function(t){
+  t.addEventListener("click",function(){
+    document.querySelectorAll(".tab").forEach(function(x){x.classList.remove("active")});
+    document.querySelectorAll(".section").forEach(function(x){x.classList.remove("active")});
+    t.classList.add("active");
+    document.getElementById("sec-"+t.dataset.tab).classList.add("active");
+    if(t.dataset.tab==="stats")loadStats();
+    if(t.dataset.tab==="grades")loadGrades();
+  });
+});
+
+var studentsCache=[];
+
+function refreshStudents(){
+  return api("GET","/students").then(function(list){
+    studentsCache=list||[];
+    renderStudents();
+    populateStudentSelects();
+  });
+}
+
+function renderStudents(){
+  var tb=document.getElementById("stu-tbody");
+  if(!studentsCache.length){tb.innerHTML='<tr><td colspan="7" class="empty">暂无学员</td></tr>';return}
+  var html="";
+  studentsCache.forEach(function(s){
+    var sc=s.status==="在读"?"badge-green":s.status==="暂停"?"badge-yellow":"badge-gray";
+    html+="<tr><td>"+s.id+"</td><td>"+esc(s.nickname)+"</td><td>"+esc(s.phone)+"</td><td><span class='badge badge-blue'>"+esc(s.level)+"</span></td><td><span class='badge "+sc+"'>"+esc(s.status)+"</span></td><td id='rem-"+s.id+"'>-</td><td><button class='btn btn-sm btn-primary' onclick='editStudent("+s.id+")'>编辑</button> <button class='btn btn-sm btn-danger' onclick='delStudent("+s.id+")'>删除</button></td></tr>";
+  });
+  tb.innerHTML=html;
+  studentsCache.forEach(function(s){
+    api("GET","/students/"+s.id+"/remaining").then(function(d){var el=document.getElementById("rem-"+s.id);if(el)el.textContent=d.total_remaining}).catch(function(){});
+  });
+}
+
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+
+function addStudent(){
+  var nick=document.getElementById("s-nick").value.trim();
+  if(!nick){toast("请输入昵称",true);return}
+  api("POST","/students",{nickname:nick,phone:document.getElementById("s-phone").value.trim(),level:document.getElementById("s-level").value,status:document.getElementById("s-status").value}).then(function(){
+    toast("添加成功");document.getElementById("s-nick").value="";document.getElementById("s-phone").value="";
+    refreshStudents();
+  }).catch(function(e){toast(e.message,true)});
+}
+
+function editStudent(id){
+  var s=studentsCache.find(function(x){return x.id===id});
+  if(!s)return;
+  document.getElementById("e-id").value=s.id;
+  document.getElementById("e-nick").value=s.nickname;
+  document.getElementById("e-phone").value=s.phone;
+  document.getElementById("e-level").value=s.level;
+  document.getElementById("e-status").value=s.status;
+  document.getElementById("edit-modal").classList.add("show");
+}
+
+function closeModal(){document.getElementById("edit-modal").classList.remove("show")}
+
+function saveStudent(){
+  var id=document.getElementById("e-id").value;
+  api("PUT","/students/"+id,{nickname:document.getElementById("e-nick").value.trim(),phone:document.getElementById("e-phone").value.trim(),level:document.getElementById("e-level").value,status:document.getElementById("e-status").value}).then(function(){
+    toast("保存成功");closeModal();refreshStudents();
+  }).catch(function(e){toast(e.message,true)});
+}
+
+function delStudent(id){
+  if(!confirm("确定删除该学员？"))return;
+  api("DELETE","/students/"+id).then(function(){toast("已删除");refreshStudents()}).catch(function(e){toast(e.message,true)});
+}
+
+function populateStudentSelects(){
+  var opts="<option value=''>-- 请选择 --</option>";
+  studentsCache.forEach(function(s){opts+="<option value='"+s.id+"'>"+esc(s.nickname)+" ("+s.level+")</option>"});
+  ["p-student","p-query-student","c-student","c-query-student","g-student"].forEach(function(id){
+    document.getElementById(id).innerHTML=opts;
+  });
+}
+
+function purchasePackage(){
+  var sid=document.getElementById("p-student").value;
+  if(!sid){toast("请选择学员",true);return}
+  var hours=parseInt(document.getElementById("p-hours").value);
+  if(!hours||hours<=0){toast("课时数必须为正整数",true);return}
+  api("POST","/packages",{student_id:parseInt(sid),purchase_date:document.getElementById("p-date").value,total_hours:hours,expiry_date:document.getElementById("p-expiry").value}).then(function(){
+    toast("购买成功");document.getElementById("p-hours").value="";
+    loadPackages();
+  }).catch(function(e){toast(e.message,true)});
+}
+
+function loadPackages(){
+  var sid=document.getElementById("p-query-student").value;
+  if(!sid){document.getElementById("pkg-tbody").innerHTML="";return}
+  api("GET","/students/"+sid+"/packages").then(function(list){
+    list=list||[];
+    var tb=document.getElementById("pkg-tbody");
+    if(!list.length){tb.innerHTML='<tr><td colspan="6" class="empty">暂无课时包</td></tr>';return}
+    var today=new Date().toISOString().slice(0,10);
+    var html="";
+    list.forEach(function(p){
+      var exp=p.expiry_date<today;
+      var used=p.remaining_hours===0;
+      var st=used?"<span class='badge badge-gray'>已用完</span>":exp?"<span class='badge badge-yellow'>已过期</span>":"<span class='badge badge-green'>有效</span>";
+      html+="<tr><td>"+p.id+"</td><td>"+p.purchase_date+"</td><td>"+p.total_hours+"</td><td>"+p.remaining_hours+"</td><td>"+p.expiry_date+"</td><td>"+st+"</td></tr>";
+    });
+    tb.innerHTML=html;
+  }).catch(function(e){toast(e.message,true)});
+}
+
+function loadRemaining(){
+  var sid=document.getElementById("c-student").value;
+  var el=document.getElementById("remaining-info");
+  if(!sid){el.textContent="";return}
+  api("GET","/students/"+sid+"/remaining").then(function(d){
+    el.textContent="有效剩余课时："+d.total_remaining+" 节";
+  }).catch(function(){el.textContent=""});
+}
+
+function consumeClass(){
+  var sid=document.getElementById("c-student").value;
+  if(!sid){toast("请选择学员",true);return}
+  api("POST","/students/"+sid+"/consume").then(function(){
+    toast("消课成功，扣除1节课时");loadRemaining();
+  }).catch(function(e){toast(e.message,true)});
+}
+
+function loadAttendance(){
+  var sid=document.getElementById("c-query-student").value;
+  if(!sid){document.getElementById("att-tbody").innerHTML="";return}
+  api("GET","/students/"+sid+"/attendance").then(function(list){
+    list=list||[];
+    var tb=document.getElementById("att-tbody");
+    if(!list.length){tb.innerHTML='<tr><td colspan="3" class="empty">暂无记录</td></tr>';return}
+    var html="";
+    list.forEach(function(r){html+="<tr><td>"+r.id+"</td><td>"+r.consumed_at+"</td><td>"+esc(r.package_info)+"</td></tr>"});
+    tb.innerHTML=html;
+  }).catch(function(e){toast(e.message,true)});
+}
+
+function onGradeStudentChange(){
+  var sid=document.getElementById("g-student").value;
+  var hint=document.getElementById("grade-hint");
+  if(!sid){hint.textContent="";return}
+  var s=studentsCache.find(function(x){return x.id==sid});
+  if(!s){hint.textContent="";return}
+  var idx=levels.indexOf(s.level);
+  if(idx<0||idx>=levels.length-1){hint.textContent="当前级别 "+s.level+"，已无法再申请更高级别";return}
+  hint.textContent="当前级别："+s.level+"，可申请："+levels[idx+1];
+  document.getElementById("g-target").value=levels[idx+1];
+}
+
+function applyGrade(){
+  var sid=document.getElementById("g-student").value;
+  if(!sid){toast("请选择学员",true);return}
+  var target=document.getElementById("g-target").value;
+  var passed=document.getElementById("g-passed").value==="1";
+  api("POST","/grades",{student_id:parseInt(sid),target_level:target,passed:passed}).then(function(){
+    toast(passed?"考级通过，级别已更新":"考级申请已记录（未通过）");
+    refreshStudents();loadGrades();
+  }).catch(function(e){toast(e.message,true)});
+}
+
+function loadGrades(){
+  api("GET","/grades").then(function(list){
+    list=list||[];
+    var tb=document.getElementById("grade-tbody");
+    if(!list.length){tb.innerHTML='<tr><td colspan="6" class="empty">暂无考级记录</td></tr>';return}
+    var html="";
+    list.forEach(function(g){
+      var sc=g.passed?"<span class='badge badge-green'>通过</span>":"<span class='badge badge-yellow'>未通过</span>";
+      html+="<tr><td>"+g.id+"</td><td>"+esc(g.nickname)+"</td><td>"+esc(g.level)+"</td><td>"+esc(g.target_level)+"</td><td>"+sc+"</td><td>"+g.applied_at+"</td></tr>";
+    });
+    tb.innerHTML=html;
+  }).catch(function(e){toast(e.message,true)});
+}
+
+function loadStats(){
+  api("GET","/stats/monthly").then(function(list){
+    list=list||[];
+    var grid=document.getElementById("stat-grid");
+    var map={};
+    list.forEach(function(s){map[s.level]=s.count});
+    var html="";
+    levels.forEach(function(l){
+      html+="<div class='stat-item'><div class='num'>"+(map[l]||0)+"</div><div class='lbl'>"+l+"</div></div>";
+    });
+    var total=0;list.forEach(function(s){total+=s.count});
+    html+="<div class='stat-item'><div class='num'>"+total+"</div><div class='lbl'>合计</div></div>";
+    grid.innerHTML=html;
+  }).catch(function(e){toast(e.message,true)});
+}
+
+(function init(){
+  var today=new Date().toISOString().slice(0,10);
+  document.getElementById("p-date").value=today;
+  var d=new Date();d.setMonth(d.getMonth()+6);
+  document.getElementById("p-expiry").value=d.toISOString().slice(0,10);
+  refreshStudents();
+})();
+</script>
+</body>
+</html>
