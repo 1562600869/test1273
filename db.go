@@ -20,6 +20,15 @@ func levelIndex(l string) (int, bool) {
 	return -1, false
 }
 
+func validStatus(s string) bool {
+	for _, v := range statuses {
+		if v == s {
+			return true
+		}
+	}
+	return false
+}
+
 type Student struct {
 	ID        int64  `json:"id"`
 	Nickname  string `json:"nickname"`
@@ -137,6 +146,12 @@ func CreateStudent(db *sql.DB, nickname, phone, level, status string) (*Student,
 	if status == "" {
 		status = "在读"
 	}
+	if _, ok := levelIndex(level); !ok {
+		return nil, fmt.Errorf("无效的级别: %s，有效值: %v", level, levels)
+	}
+	if !validStatus(status) {
+		return nil, fmt.Errorf("无效的状态: %s，有效值: %v", status, statuses)
+	}
 	res, err := db.Exec("INSERT INTO students (nickname, phone, level, status) VALUES (?, ?, ?, ?)", nickname, phone, level, status)
 	if err != nil {
 		return nil, err
@@ -146,6 +161,12 @@ func CreateStudent(db *sql.DB, nickname, phone, level, status string) (*Student,
 }
 
 func UpdateStudent(db *sql.DB, id int64, nickname, phone, level, status string) (*Student, error) {
+	if _, ok := levelIndex(level); !ok {
+		return nil, fmt.Errorf("无效的级别: %s，有效值: %v", level, levels)
+	}
+	if !validStatus(status) {
+		return nil, fmt.Errorf("无效的状态: %s，有效值: %v", status, statuses)
+	}
 	_, err := db.Exec("UPDATE students SET nickname=?, phone=?, level=?, status=? WHERE id=?", nickname, phone, level, status, id)
 	if err != nil {
 		return nil, err
